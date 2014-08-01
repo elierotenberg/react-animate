@@ -20,5 +20,18 @@
   "bugs": {
     "url": "https://github.com/elierotenberg/react-animate/issues"
   },
-  "homepage": "https://github.com/elierotenberg/react-animate"
+  "homepage": "https://github.com/elierotenberg/react-animate",
+  "dependencies": {
+    "autoprefixer": "^2.2.0",
+    "d3": "^3.4.11",
+    "lodash": "^2.4.1",
+    "raf": "^2.0.2"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^2.1.4",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-react": "^0.9.0",
+    "react": "^0.11.1"
+  }
 }
