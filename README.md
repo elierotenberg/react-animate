@@ -56,13 +56,16 @@ var React = require("react");
 var AnimateMixin = require("react-animate");
 var fromCSS = require("react-css").fromCSS;
 
+var from = fromCSS("{ transform: scale(100%); }");
+var to = fromCSS("{ transform: scale(200%); }");
+
 var MyComponent = React.createClass({
 	mixins: [AnimateMixin],
 	/* ... */
 	showOff: function showOff() {
 		this.animate("my-custom-animation",
-			fromCSS("{ transform: scale(100%); }"),
-			fromCSS("{ transform: scale(200%); }"),
+			from,
+			to,
 			"cubic-in-out", 5000, this.stopShowingOff);
 		this.setState({
 			showoff: true,
