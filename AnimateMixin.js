@@ -70,7 +70,7 @@ var AnimateMixin = {
      */
     animate: function animate(name, from, to, easing, duration, onComplete) {
         onComplete = onComplete || _.identity;
-        assert(_.isEquel(_.keys(from), _.keys(to)));
+        assert(_.isEqual(_.keys(from), _.keys(to)));
         var properties = {};
         _.each(from, function(f, k) {
             var t = to[k];
