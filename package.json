@@ -1,0 +1,24 @@
+{
+  "name": "react-animate",
+  "version": "0.0.0",
+  "description": "React mixin to enable one or multiple CSS animations without bypassing React VDOM, embracing the React way of animating.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:elierotenberg/react-animate.git"
+  },
+  "keywords": [
+    "react",
+    "d3",
+    "animate"
+  ],
+  "author": "Elie Rotenberg <elie@rotenberg.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/elierotenberg/react-animate/issues"
+  },
+  "homepage": "https://github.com/elierotenberg/react-animate"
+}
