@@ -1,6 +1,6 @@
 {
   "name": "react-animate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "React mixin to enable one or multiple CSS animations without bypassing React VDOM, embracing the React way of animating.",
   "main": "index.js",
   "scripts": {
