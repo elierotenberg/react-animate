@@ -77,7 +77,7 @@ var AnimateMixin = {
             properties[k] = {
                 from: f,
                 to: t
-            }:
+            };
         });
         var self = this;
         if(_.has(this._currentAnimation, name)) {
