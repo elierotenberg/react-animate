@@ -1,6 +1,6 @@
 var _ = require("lodash");
 var assert = require("assert");
-var Animate = require("../Animate");
+var Animate = require("./Animate");
 
 /**
  * Animation component Mixin.
