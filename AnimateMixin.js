@@ -3,7 +3,7 @@ var assert = require("assert");
 var Animate = require("./Animate");
 
 var shouldEnableHA = function() {
-    var userAgent = navgiator.userAgent;
+    var userAgent = navigator.userAgent;
     var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     var isGingerbread = /Android 2\.3\.[3-7]/i.test(userAgent)
     return userAgent && isMobile && !isGingerbread;
