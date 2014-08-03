@@ -2,6 +2,15 @@ var _ = require("lodash");
 var assert = require("assert");
 var Animate = require("./Animate");
 
+var shouldEnableHA = function() {
+    var userAgent = navgiator.userAgent;
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    var isGingerbread = /Android 2\.3\.[3-7]/i.test(userAgent)
+    return userAgent && isMobile && !isGingerbread;
+};
+
+var transformProperties = ["WebkitTransform", "MozTransform", "MSTransform", "OTransform", "Transform"];
+
 /**
  * Animation component Mixin.
  * Enables the uage of {AnimateMixin.animate}, {AnimateMixin.abortAnimation}
@@ -68,9 +77,35 @@ var AnimateMixin = {
      * @return {Object.<String, Function>}
      * @public
      */
-    animate: function animate(name, from, to, easing, duration, onComplete) {
+    animate: function animate(name, from, to, easing, duration, onComplete, disableMobileHA) {
         onComplete = onComplete || _.identity;
-        assert(_.isEqual(_.keys(from), _.keys(to)));
+        /* Ensure keys of from and to are the same; copy keys that are in one but not in the other. */
+        _.each(from, function(v, k) {
+            if(!_.has(to, k)) {
+                to[k] = v;
+            }
+        });
+        _.each(to, function(v, k) {
+            if(!_.has(from, k)) {
+                from[k] = v;
+            }
+        });
+        if(shouldEnableHA()) {
+            _.each(transformProperties, function(k) {
+                if(!_.has(from, k)) {
+                    from[k] = "translateZ(0)";
+                }
+                else {
+                    from[k] = "translateZ(0) " + from[k];
+                }
+                if(!_.jas(to, k)) {
+                    to[k] = "translateZ(0)";
+                }
+                else {
+                    to[k] = "translateZ(0) " + to[k];
+                }
+            });
+        }
         var properties = {};
         _.each(from, function(f, k) {
             var t = to[k];
