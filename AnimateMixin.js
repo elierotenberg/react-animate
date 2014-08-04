@@ -77,8 +77,9 @@ var AnimateMixin = {
      * @return {Object.<String, Function>}
      * @public
      */
-    animate: function animate(name, from, to, easing, duration, onComplete, disableMobileHA) {
+    animate: function animate(name, from, to, easing, duration, onComplete, onAbort, disableMobileHA) {
         onComplete = onComplete || _.identity;
+        onAbort = onAbort || _.identity;
         /* Ensure keys of from and to are the same; copy keys that are in one but not in the other. */
         _.each(from, function(v, k) {
             if(!_.has(to, k)) {
@@ -120,7 +121,7 @@ var AnimateMixin = {
         }
         this._currentAnimation[name] = Animate.startInterpolation(properties, easing, duration, function(animatedStyle) {
             self._updateAnimatedStyle(name, animatedStyle);
-        }, onComplete);
+        }, onComplete, onAbort);
         return {
             abortAnimation: function() {
                 self.abortAnimation(name);

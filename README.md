@@ -107,6 +107,8 @@ Start an animation with the specified parameters. During each available animatio
 		Examples: `1000`, `0`.
 - `[onComplete: Function]`. Callback to be invoked when the animation is complete. Defaults to a no-op.
 		Example: `function() { console.warn("Animation has finished!"); }`
+- `[onAbort: Function]`. Callback to be invoked when the animation is aborted. Defaults to a no-op. It is passed the progress at the time of the animation, in [0,1] range.
+		Example: `function(t) { console.warn("Animation has aborted at ", t*100, "%."); }`
 - `[disableMobileHA: boolean]`. Disable mobile hardware acceleration. Defaults to `false`. Internally, mobile hardware acceleration is activated by default on all mobile devices except `Android Gingerbread`.
 - Return value: `Object`. An object containing a single property name `abortAnimation`, which upon invocation aborts the animation. It is of limited use in practice since `AnimateMixin` automatically aborts ongoing animations upon unmounting or starting a new animation with the same `identifier`, but it may be useful for example if the animated element is removed.
 		Form: `{ abortAnimation: Function }`.

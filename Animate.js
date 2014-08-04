@@ -6,7 +6,7 @@ var getInterpolator = function getInterpolator(from, to) {
 	return d3.interpolate(from, to);
 };
 
-var startInterpolation = function startInterpolation(properties, easing, duration, onTick, onComplete) {
+var startInterpolation = function startInterpolation(properties, easing, duration, onTick, onComplete, onAbort) {
 	var aborted = false;
 	var nextTick = null;
 	var interpolators = {};
@@ -31,12 +31,13 @@ var startInterpolation = function startInterpolation(properties, easing, duratio
 	var start = Date.now();
 	var end = start + duration;
 	var tick = function tick() {
+		var t = (now - start)/(end - start);
 		if(aborted) {
+			onAbort(t);
 			return;
 		}
 		else {
 			var now = Date.now();
-			var t = (now - start)/(end - start);
 			if(t > 1) {
 				var finalProperties = {};
 				_.each(properties, function(specs, name) {
