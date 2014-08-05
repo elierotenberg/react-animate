@@ -31,13 +31,14 @@ var startInterpolation = function startInterpolation(properties, easing, duratio
 	var start = Date.now();
 	var end = start + duration;
 	var tick = function tick() {
+		var now = Date.now();
 		var t = (now - start)/(end - start);
+		console.warn(t);
 		if(aborted) {
 			onAbort(t);
 			return;
 		}
 		else {
-			var now = Date.now();
 			if(t > 1) {
 				var finalProperties = {};
 				_.each(properties, function(specs, name) {
@@ -52,7 +53,7 @@ var startInterpolation = function startInterpolation(properties, easing, duratio
 				_.each(_.keys(properties), function(name) {
 					tickProperties[name] = interpolators[name](ease(t));
 				});
-				onTick(tickProperties);
+				onTick(tickProperties, t);
 				nextTick = raf(tick);
 			}
 		}

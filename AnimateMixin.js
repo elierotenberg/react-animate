@@ -91,7 +91,7 @@ var AnimateMixin = {
                 from[k] = v;
             }
         });
-        if(shouldEnableHA()) {
+        if(shouldEnableHA() &&!disableMobileHA) {
             _.each(transformProperties, function(k) {
                 if(!_.has(from, k)) {
                     from[k] = "translateZ(0)";
