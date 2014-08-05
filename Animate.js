@@ -33,7 +33,6 @@ var startInterpolation = function startInterpolation(properties, easing, duratio
 	var tick = function tick() {
 		var now = Date.now();
 		var t = (now - start)/(end - start);
-		console.warn(t);
 		if(aborted) {
 			onAbort(t);
 			return;
