@@ -77,3 +77,9 @@ Get the current value of the animated style. You can call it from `render()` and
 Abort the animation with the given name, if it exists. Returns `true` if an animation with this name existed. Returns `false` otherwise.
 
 Note that you don't have to call this function in `componentWillUnmount`. `react-animate` will take care of that for you.
+
+#### OMG ES6 EVERYWHERE
+
+You don't need to use ES6 or any transpiler to use this package.
+
+It is entirely transpiled to ES5 using `6to5` and you can use it in your regular CommonJS environment (eg. `node`, `browserify`, `webpack`). You should try it sometime, though.
