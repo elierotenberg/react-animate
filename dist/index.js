@@ -49,10 +49,18 @@ var raf = _interopRequire(require("raf"));
 
 var tween = _interopRequire(require("tween-interpolate"));
 
-function private(property) {
+// To avoid collisions with other mixins,
+// wrap private properties in this method.
+// It doesn't implement any actual protection
+// mechanisms but merely avoids mistakes/conflicts.
+function privateSymbol(property) {
   return "__animateMixin" + property;
 }
 
+// Decide whether we should do the hardware accelaration trick
+// if we are not explicitly prevented from.
+// The trick will be enabled in mobile browsers which are not
+// Android Gingerbread.
 function shouldEnableHA() {
   if (!__BROWSER__) {
     return false;
@@ -65,9 +73,11 @@ function shouldEnableHA() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) && /Android 2\.3\.[3-7]/i.test(userAgent);
 }
 
-var _animations = private("animations");
+var _animations = privateSymbol("animations");
 
 var DEFAULT_EASING = "cubic-in-out";
+
+// Hardware acceleration trick constants
 var transformProperties = ["WebkitTransform", "MozTransform", "MSTransform", "OTransform", "Transform"];
 var transformHA = "translateZ(0)";
 
@@ -77,20 +87,33 @@ module.exports = (function () {
   _defineProperty(_module$exports, _animations, null);
 
   _defineProperty(_module$exports, "componentWillMount", function componentWillMount() {
-    this[_animations] = {};
+    this[_animations] = {}; // initialize the property to no animations
   });
 
   _defineProperty(_module$exports, "componentWillUnmount", function componentWillUnmount() {
     var _this = this;
     if (this[_animations] !== null) {
+      // abort any currently running animation
       _.each(this[_animations], function (animation, name) {
         return _this.abortAnimation(name);
       });
     }
   });
 
+  _defineProperty(_module$exports, "getAnimatedStyle", function getAnimatedStyle(name) {
+    if (__DEV__) {
+      // typecheck parameters in dev mode
+      name.should.be.a.String;
+    }
+    if (this[_animations][name] !== void 0) {
+      return this[_animations][name].currentStyle;
+    }
+    return {}; // silently fail if there is no such animation
+  });
+
   _defineProperty(_module$exports, "abortAnimation", function abortAnimation(name) {
     if (__DEV__) {
+      // typecheck parameters in dev mode
       name.should.be.a.String;
     }
     if (this[_animations][name] !== void 0) {
@@ -101,8 +124,10 @@ module.exports = (function () {
       var currentStyle = this[_animations][name].currentStyle;
       raf.cancel(nextTick);
       onAbort(currentStyle, t, easingFn(t));
-      delete this[_animations][name];
+      delete this[_animations][name]; // unregister the animation
+      return true;
     }
+    return false; // silently fail but returns false
   });
 
   _defineProperty(_module$exports, "animate", function animate(name, fromStyle, toStyle, duration) {
@@ -114,6 +139,7 @@ module.exports = (function () {
     var onComplete = opts.onComplete || _.noop;
     var disableMobileHA = !!opts.disableMobileHA;
     if (__DEV__) {
+      // typecheck parameters in dev mode
       name.should.be.a.String;
       fromStyle.should.be.an.Object;
       toStyle.should.be.an.Object;
@@ -122,11 +148,18 @@ module.exports = (function () {
       onAbort.should.be.a.Function;
       onComplete.should.be.a.Function;
     }
+    if (this[_animations][name] !== void 0) {
+      // if there is already an animation with this name, abort it
+      this.abortAnimation(name);
+    }
+    // create the actual easing function using tween-interpolate (d3 smash)
     var easingFn = _.isObject(easing) ? tween.ease.apply(tween, [easing.type].concat(_toArray(easing.arguments))) : tween.ease(easing);
+    // reformat the input: [property]: [from, to]
     var styles = {};
     _.each(fromStyle, function (value, property) {
       return styles[property] = [value, value];
-    });
+    }); // unless told otherwise below, the value is assumed constant
+    // if we dont have an initial value for each property, assume it is constant from the beginning
     _.each(toStyle, function (value, property) {
       return styles[property] = styles[property] === void 0 ? [value, value] : [styles[property][0], value];
     });
@@ -136,17 +169,19 @@ module.exports = (function () {
       var from = _ref2[0];
       var to = _ref2[1];
       return tween.interpolate(from, to);
-    });
+    }); // get an interpolator for each property
     var finalStyle = _.mapValues(styles, function (_ref3) {
       var _ref32 = _slicedToArray(_ref3, 2);
 
       var from = _ref32[0];
       var to = _ref32[1];
       return to;
-    });
+    }); // pre-compute the final style
 
     if (!disableMobileHA && shouldEnableHA()) {
+      // do the hardware acceleration trick
       _.each(transformProperties, function (property) {
+        // for each 'transform' property, set/prepend 'translateZ(0)'
         if (styles[property] === void 0) {
           styles[property] = [transformHA, transformHA];
         } else {
@@ -160,18 +195,20 @@ module.exports = (function () {
     }
 
     var start = Date.now();
-    var stateKey = private("animation" + name);
+    var stateKey = privateSymbol("animation" + name);
 
     var tick = function () {
+      // the main ticker function
       var now = Date.now();
-      var t = (now - start) / duration;
+      var t = (now - start) / duration; // progress: starts at 0, ends at > 1
       if (t > 1) {
+        // we are past the end
         _this2.setState(_defineProperty({}, stateKey, finalStyle));
         onTick(finalStyle, 1, easingFn(1));
         onComplete(finalStyle, t, easingFn(t));
-        delete _this2[_animations][name];
+        delete _this2[_animations][name]; // unregister the animation
         return;
-      }
+      } // the animation is not over yet
       var currentStyle = _.mapValues(interpolators, function (fn) {
         return fn(easingFn(t));
       });
@@ -180,9 +217,11 @@ module.exports = (function () {
       Object.assign(_this2[_animations][name], { nextTick: raf(tick), t: t, currentStyle: currentStyle });
     };
 
+    // register the animation
     this[_animations][name] = { easingFn: easingFn, onAbort: onAbort, nextTick: raf(tick), t: 0, currentStyle: fromStyle };
     return this;
   });
 
   return _module$exports;
 })();
+// prepare the property to avoid reshapes

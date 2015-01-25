@@ -1,160 +1,79 @@
-<<<<<<< HEAD
 react-animate
 =============
 Allows to animate parts of a React components programmatically, without bypassing React internals and without altering the DOM directly.
-It works by leveraging `d3` interpolators and applying them to special state keys containing the styles.
-Multiples animations can be run concurrently since each animation is designed by a name. Different names target different animations.
 
+It works by interpolating intermediate styles values and applying them to special state keys containing the styles, on each animation frame using `requestAnimationFrame`.
 
-### Demo and blogpost
-See [this repo](https://github.com/elierotenberg/react-styling-demo) for explanations and demos.
+Multiples animations can be run concurrently since each animation is identified by a name. Different names target different animations.
 
 ### Usage
 A component with the `AnimateMixin` mixin gets three new methods: `animate`, `getAnimatedStyle`, and `abortAnimation` (which is of limited use under normal circonstances
 since the mixin takes care of aborting any animations before unmounting).
+
 Trigger an animation with `animate`, and inject the associated style in the `render` function using `getAnimatedStyle`.
 ```js
-/** @jsx React.DOM */
-var React = require("react");
-var AnimateMixin = require("react-animate");
+React.createClass({
+  mixins: [AnimateMixin],
 
-var MyComponent = React.createClass({
-	mixins: [AnimateMixin],
-	getInitialState: function getInitialState() {
-		return {
-			showoff: false,
-		};
-	},
-	showOff: function showOff() {
-		this.animate("my-custom-animation", {
-			opacity: 0,
-		}, {
-			opacity: 1,
-		}, "cubic-in-out", 5000, this.stopShowingOff);
-		this.setState({
-			showoff: true,
-		});
-	},
-	stopShowingOff: function stopShowingOff() {
-		this.setState({
-			showoff: false,
-		});
-	},
-	render: function render() {
-		return (
-			<div>
-				<a onClick={this.showOff}>Click to show off !</a>
-				{ this.state.showoff ? (
-					<span style={this.getAnimatedStyle("my-custom-animation")}>What a show off !</span>
-				) : null }
-			</div>
-		);
-	},
+  fadeIn() {
+    this.animate(
+      'my-custom-animation', // animation name
+      { opacity: 0 }, // initial style
+      { opacity: 1 }, // final style
+      1000, // animation duration (in ms)
+      { easing: 'linear' } // other options
+    );
+  },
+
+  render() {
+    return <div>
+      <button onClick={this.fadeIn}>Click to fade in</button>
+      <div style={this.getAnimatedStyle('my-animation')}>
+        This text will appear soon after the click.
+      </div>
+    </div>;
+  },
 });
 ```
 
-Since many animation-related properties needs vendor-prefixing, you can use `react-css` to autoprefix them.
-```js
-/** @jsx React.DOM */
-var React = require("react");
-var AnimateMixin = require("react-animate");
-var fromCSS = require("react-css").fromCSS;
+### Installation
 
-var from = fromCSS("{ transform: scale(100%); }");
-var to = fromCSS("{ transform: scale(200%); }");
+`npm install react-animate --save`
 
-var MyComponent = React.createClass({
-	mixins: [AnimateMixin],
-	/* ... */
-	showOff: function showOff() {
-		this.animate("my-custom-animation",
-			from,
-			to,
-			"cubic-in-out", 5000, this.stopShowingOff);
-		this.setState({
-			showoff: true,
-		});
-	},
-	/* ... */
-});
-```
+CommonJS:
+
+`var AnimateMixin = require('react-animate');`
+
+ES6 modules (via `6to5`):
+
+`import AnimateMixin from 'react-animate';`
 
 ### API
-The animated features are defined by a mixin at the top level of this package. To mix it in your components, simply include it in its `mixins` property.
-```js
-/** @jsx React.DOM */
-var React = require("react");
-var AnimateMixin = require("react-animate");
 
-var MyComponent = React.createClass({
-		mixins: [AnimateMixin],
-		/* ... */
-});
-```
+#### `this.animate(name, initialStyle, finalStyle, duration, opts)`
 
-A component with `AnimateMixin` gets the following methods.
+Start an animation. Returns `this` for chaining.
 
-#### ReactComponent#animate(identifier: String, initialStyle: Object, finalStyle: Object, easing: String|Object, duration: Number, onComplete: Function?, disableMobileHA: boolean?): Object
-Start an animation with the specified parameters. During each available animation frame, `this.setState` will be called, triggering a component update.
-- `idenfitier: String`. Can be any string, and is used to identify a single animation within a component, which can be refered to in other methods.
-		Examples:  `"fade-in-page"`, `"flip-this-image"`, `"however-you-want-to-name-me"`.
-- `initialStyle: Object`. Describes the initial state of the animation, using camelCased keys. If you are lazy, you may want to read this from the DOM beforehand using `getDOMNode`, but thats up to yo as it may induce [layout thrashing](http://wilsonpage.co.uk/preventing-layout-thrashing/).
-		Example: `{ backgroundColor: "#fff", transform: "translateX(30px)" }`.
-- `finalStyle: Object`. Describes the final state of the animation, using camelCased keys.
-		Example: `{ backgroundColor: "#000", transform: "translateX(120px)" }`.
-- `easing: String|Object`. Easing to apply to the transition. All [`d3` easings](https://github.com/mbostock/d3/wiki/Transitions#d3_ease) are available. The `String` form is straightforward. The `Object` form is expected to have 2 properties, `type: String` and `arguments: Array`, which we be passed to `d3.ease`.
-		Examples: `"linear"`, `"cubic-in"`, `"exp-out"`, `{ type: "poly", arguments: [4]}`.
-- `duration: Number`. Duration of the animation, in milliseconds. Note that since under the hood `react-animate` uses `requestAnimationFrame`, this is the actual duration between the beginning and the end of the animation, not the time spent animating.
-		Examples: `1000`, `0`.
-- `[onComplete: Function]`. Callback to be invoked when the animation is complete. Defaults to a no-op.
-		Example: `function() { console.warn("Animation has finished!"); }`
-- `[onAbort: Function]`. Callback to be invoked when the animation is aborted. Defaults to a no-op. It is passed the progress at the time of the animation, in [0,1] range.
-		Example: `function(t) { console.warn("Animation has aborted at ", t*100, "%."); }`
-- `[disableMobileHA: boolean]`. Disable mobile hardware acceleration. Defaults to `false`. Internally, mobile hardware acceleration is activated by default on all mobile devices except `Android Gingerbread`.
-- Return value: `Object`. An object containing a single property name `abortAnimation`, which upon invocation aborts the animation. It is of limited use in practice since `AnimateMixin` automatically aborts ongoing animations upon unmounting or starting a new animation with the same `identifier`, but it may be useful for example if the animated element is removed.
-		Form: `{ abortAnimation: Function }`.
+- `name` can be any string. If you restart an animation with the same name, the previous animation with the same name will be cancelled and replaced by this one.
 
-#### ReactComponent.getAnimatedStyle(identifier: String): Object
-Obtain the current animated style for the given animation identifier.
+- `initialProperties` and `finalProperties` are styles hashes, like the ones used by React, eg. `{ fontSize: '12px' }` means `font-size: 12px` when translated to CSS by React. If a property is specified in one of the hashed by not the other, it is assumed to remain constant over the duration of the animation.
 
-- `identifier: String`. Identifier of a previously started animation. Throws if no such animation exists.
-- Return value: `Object`. Current intermediate animated style, in the form of a React style object, to be passed to an animated ReactComponent.
-		Example: `<img style={this.getAnimatedStyle("flip-this-image") />}`.
+- `duration` is a number of milliseconds representing the total duration of the animation.
 
-####ReactComponent.abortAnimation(identifier: String)
-Abort a previously started animation.
-- `identifier: String`. Identifier of a previously started animation. Throws if no such animation exists.
+- `options` is an optional hash of optionals parameters :
 
-### LICENSE
-MIT Elie Rotenberg 2014
-=======
-ES6 Starterkit
-==============
+  - `easing`: the easing of the animation timing. Can be either a string or a `{ type, arguments }` object. In both case, it uses `d3` under the hood, refer to their [docs](https://github.com/mbostock/d3/wiki/Transitions#ease). Defaults to `cubic-in-out`.
 
-The future is today!
+  - `onTick`, `onAbort`, `onComplete`: optional callbacks functions that will be invoked respectively on each tick, on animation abort, or on animation complete. They will be called with `(currentStyle, progress, easedProgress)`. Defaults to no-op.
 
-#### Usage
+  - `disableMobileHA`: flag to prevent the heuristic addition of dummy properties to attempt to force hardware acceleration on mobiles. Defaults to `false`.
 
-1. Fork or clone this repository.
-2. (Optional) Edit `package.json` if you intent to publish your package on `npm`.
-3. `npm install` to install all the required dependencies from `npm`.
-4. Hack `src/index.js`.
-5. Build/rebuild using `gulp`.
-6. Don't forget to edit this `README.md` file.
+#### `this.getAnimatedStyle(name)`
 
-#### Features
+Get the current value of the animated style. You can call it from `render()` and pass it directly as the `style` prop of a React DOM element such as `<div>`. If no animation with this name exists, it will fail silently and return an empty hash (`{}`).
 
-- Sanely configured `gulpfile.js`, `package.json`, `.gitignore`, `.editorconfig` and `.jshintrc`.
-- ES6 code from the `src` folder is transpiled into ES5 code in the `dist` folder via `6to5`.
-- Both CommonJS and ES6 modules are supported.
-- Several modules and variables are automatically injected in each module at transpile time. Check (and edit) `__prelude.js`.
-- `__DEV__` and `__PROD__` are boolean constants reflecting `process.env.NODE_ENV`. Best friends with `envify` and `uglify`.
-- `__BROWSER__` and `__NODE__` are boolean constants trying hard to reflect whether the code runs in the browser (via browserify/webpack) or in a NodeJS env.
-- `bluebird` implementation of `Promise` is injected into global scope, since its is so neat and it outperforms native `Promise`.
-- `should` is injected into each module, so you can do development-time assertions that are skipped in production, eg. `if(__DEV__) { n.should.be.a.Number; }`.
-- `_` (`lodash`) is also injected into each module.
+#### `this.abortAnimation(name)`
 
-#### License
+Abort the animation with the given name, if it exists. Returns `true` if an animation with this name existed. Returns `false` otherwise.
 
-MIT [Elie Rotenberg](http://elie.rotenberg.io) <[elie@rotenberg.io](mailto:elie@rotenberg.io)>
->>>>>>> starterkit/master
+Note that you don't have to call this function in `componentWillUnmount`. `react-animate` will take care of that for you.
