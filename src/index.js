@@ -80,7 +80,7 @@ export default {
       name.should.be.a.String;
       fromStyle.should.be.an.Object;
       toStyle.should.be.an.Object;
-      duration.should.be.a.Number.which.is.not.above(0);
+      duration.should.be.a.Number.which.is.above(0);
       onTick.should.be.a.Function;
       onAbort.should.be.a.Function;
       onComplete.should.be.a.Function;
