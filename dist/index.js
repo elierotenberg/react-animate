@@ -1,37 +1,12 @@
 "use strict";
 
-var _slicedToArray = function (arr, i) {
-  if (Array.isArray(arr)) {
-    return arr;
-  } else {
-    var _arr = [];
+var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-    for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) {
-      _arr.push(_step.value);
+var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 
-      if (i && _arr.length === i) break;
-    }
+var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 
-    return _arr;
-  }
-};
-
-var _defineProperty = function (obj, key, value) {
-  return Object.defineProperty(obj, key, {
-    value: value,
-    enumerable: true,
-    configurable: true,
-    writable: true
-  });
-};
-
-var _toArray = function (arr) {
-  return Array.isArray(arr) ? arr : Array.from(arr);
-};
-
-var _interopRequire = function (obj) {
-  return obj && (obj["default"] || obj);
-};
+var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
 
 require("6to5/polyfill");
 var _ = require("lodash");
@@ -82,15 +57,15 @@ var transformProperties = ["WebkitTransform", "MozTransform", "MSTransform", "OT
 var transformHA = "translateZ(0)";
 
 module.exports = (function () {
-  var _module$exports = {};
+  var _ref = {};
 
-  _defineProperty(_module$exports, _animations, null);
+  _defineProperty(_ref, _animations, null);
 
-  _defineProperty(_module$exports, "componentWillMount", function componentWillMount() {
+  _defineProperty(_ref, "componentWillMount", function componentWillMount() {
     this[_animations] = {}; // initialize the property to no animations
   });
 
-  _defineProperty(_module$exports, "componentWillUnmount", function componentWillUnmount() {
+  _defineProperty(_ref, "componentWillUnmount", function componentWillUnmount() {
     var _this = this;
     if (this[_animations] !== null) {
       // abort any currently running animation
@@ -100,7 +75,7 @@ module.exports = (function () {
     }
   });
 
-  _defineProperty(_module$exports, "getAnimatedStyle", function getAnimatedStyle(name) {
+  _defineProperty(_ref, "getAnimatedStyle", function getAnimatedStyle(name) {
     if (__DEV__) {
       // typecheck parameters in dev mode
       name.should.be.a.String;
@@ -111,17 +86,18 @@ module.exports = (function () {
     return {}; // silently fail if there is no such animation
   });
 
-  _defineProperty(_module$exports, "abortAnimation", function abortAnimation(name) {
+  _defineProperty(_ref, "abortAnimation", function abortAnimation(name) {
     if (__DEV__) {
       // typecheck parameters in dev mode
       name.should.be.a.String;
     }
     if (this[_animations][name] !== void 0) {
-      var easingFn = this[_animations][name].easingFn;
-      var onAbort = this[_animations][name].onAbort;
-      var nextTick = this[_animations][name].nextTick;
-      var t = this[_animations][name].t;
-      var currentStyle = this[_animations][name].currentStyle;
+      var _animations$name = this[_animations][name];
+      var easingFn = _animations$name.easingFn;
+      var onAbort = _animations$name.onAbort;
+      var nextTick = _animations$name.nextTick;
+      var t = _animations$name.t;
+      var currentStyle = _animations$name.currentStyle;
       raf.cancel(nextTick);
       onAbort(currentStyle, t, easingFn(t));
       delete this[_animations][name]; // unregister the animation
@@ -130,8 +106,8 @@ module.exports = (function () {
     return false; // silently fail but returns false
   });
 
-  _defineProperty(_module$exports, "animate", function animate(name, fromStyle, toStyle, duration) {
-    var _this2 = this;
+  _defineProperty(_ref, "animate", function animate(name, fromStyle, toStyle, duration) {
+    var _this = this;
     var opts = arguments[4] === undefined ? {} : arguments[4];
     var easing = opts.easing === void 0 ? DEFAULT_EASING : opts.easing;
     var onTick = opts.onTick || _.noop;
@@ -153,7 +129,7 @@ module.exports = (function () {
       this.abortAnimation(name);
     }
     // create the actual easing function using tween-interpolate (d3 smash)
-    var easingFn = _.isObject(easing) ? tween.ease.apply(tween, [easing.type].concat(_toArray(easing.arguments))) : tween.ease(easing);
+    var easingFn = _.isObject(easing) ? tween.ease.apply(tween, [easing.type].concat(_toConsumableArray(easing.arguments))) : tween.ease(easing);
     // reformat the input: [property]: [from, to]
     var styles = {};
     _.each(fromStyle, function (value, property) {
@@ -163,18 +139,18 @@ module.exports = (function () {
     _.each(toStyle, function (value, property) {
       return styles[property] = styles[property] === void 0 ? [value, value] : [styles[property][0], value];
     });
-    var interpolators = _.mapValues(styles, function (_ref) {
-      var _ref2 = _slicedToArray(_ref, 2);
+    var interpolators = _.mapValues(styles, function (_ref2) {
+      var _ref22 = _slicedToArray(_ref2, 2);
 
-      var from = _ref2[0];
-      var to = _ref2[1];
+      var from = _ref22[0];
+      var to = _ref22[1];
       return tween.interpolate(from, to);
     }); // get an interpolator for each property
-    var finalStyle = _.mapValues(styles, function (_ref3) {
-      var _ref32 = _slicedToArray(_ref3, 2);
+    var finalStyle = _.mapValues(styles, function (_ref2) {
+      var _ref22 = _slicedToArray(_ref2, 2);
 
-      var from = _ref32[0];
-      var to = _ref32[1];
+      var from = _ref22[0];
+      var to = _ref22[1];
       return to;
     }); // pre-compute the final style
 
@@ -203,18 +179,18 @@ module.exports = (function () {
       var t = (now - start) / duration; // progress: starts at 0, ends at > 1
       if (t > 1) {
         // we are past the end
-        _this2.setState(_defineProperty({}, stateKey, finalStyle));
+        _this.setState(_defineProperty({}, stateKey, finalStyle));
         onTick(finalStyle, 1, easingFn(1));
         onComplete(finalStyle, t, easingFn(t));
-        delete _this2[_animations][name]; // unregister the animation
+        delete _this[_animations][name]; // unregister the animation
         return;
       } // the animation is not over yet
       var currentStyle = _.mapValues(interpolators, function (fn) {
         return fn(easingFn(t));
       });
-      _this2.setState(_defineProperty({}, stateKey, currentStyle));
+      _this.setState(_defineProperty({}, stateKey, currentStyle));
       onTick(currentStyle, t, easingFn(t));
-      Object.assign(_this2[_animations][name], { nextTick: raf(tick), t: t, currentStyle: currentStyle });
+      Object.assign(_this[_animations][name], { nextTick: raf(tick), t: t, currentStyle: currentStyle });
     };
 
     // register the animation
@@ -222,6 +198,6 @@ module.exports = (function () {
     return this;
   });
 
-  return _module$exports;
+  return _ref;
 })();
 // prepare the property to avoid reshapes
