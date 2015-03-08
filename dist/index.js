@@ -8,7 +8,7 @@ var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i =
 
 var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
 
-require("6to5/polyfill");
+require("babel/polyfill");
 var _ = require("lodash");
 var should = require("should");
 var Promise = (global || window).Promise = require("bluebird");
