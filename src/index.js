@@ -50,10 +50,14 @@ export default {
     if(__DEV__) { // typecheck parameters in dev mode
       name.should.be.a.String;
     }
-    if(this[_animations][name] !== void 0) {
-      return this[_animations][name].currentStyle;
+    return this.state[privateSymbol(`animation${name}`)] || {};
+  },
+
+  isAnimated(name) {
+    if(__DEV__) { // typecheck parameters in dev mode
+      name.should.be.a.String;
     }
-    return {}; // silently fail if there is no such animation
+    return (this[_animations][name] !== void 0);
   },
 
   abortAnimation(name) {

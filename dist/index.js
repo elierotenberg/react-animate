@@ -20,6 +20,7 @@ if (__DEV__) {
   Promise.longStackTraces();
   Error.stackTraceLimit = Infinity;
 }
+
 var raf = _interopRequire(require("raf"));
 
 var tween = _interopRequire(require("tween-interpolate"));
@@ -41,6 +42,7 @@ function shouldEnableHA() {
     return false;
   }
   var userAgent = navigator.userAgent;
+
   if (!userAgent) {
     return false;
   }
@@ -67,6 +69,7 @@ module.exports = (function () {
 
   _defineProperty(_ref, "componentWillUnmount", function componentWillUnmount() {
     var _this = this;
+
     if (this[_animations] !== null) {
       // abort any currently running animation
       _.each(this[_animations], function (animation, name) {
@@ -80,10 +83,15 @@ module.exports = (function () {
       // typecheck parameters in dev mode
       name.should.be.a.String;
     }
-    if (this[_animations][name] !== void 0) {
-      return this[_animations][name].currentStyle;
+    return this.state[privateSymbol("animation" + name)] || {};
+  });
+
+  _defineProperty(_ref, "isAnimated", function isAnimated(name) {
+    if (__DEV__) {
+      // typecheck parameters in dev mode
+      name.should.be.a.String;
     }
-    return {}; // silently fail if there is no such animation
+    return this[_animations][name] !== void 0;
   });
 
   _defineProperty(_ref, "abortAnimation", function abortAnimation(name) {
@@ -98,6 +106,7 @@ module.exports = (function () {
       var nextTick = _animations$name.nextTick;
       var t = _animations$name.t;
       var currentStyle = _animations$name.currentStyle;
+
       raf.cancel(nextTick);
       onAbort(currentStyle, t, easingFn(t));
       delete this[_animations][name]; // unregister the animation
@@ -108,7 +117,9 @@ module.exports = (function () {
 
   _defineProperty(_ref, "animate", function animate(name, fromStyle, toStyle, duration) {
     var _this = this;
+
     var opts = arguments[4] === undefined ? {} : arguments[4];
+
     var easing = opts.easing === void 0 ? DEFAULT_EASING : opts.easing;
     var onTick = opts.onTick || _.noop;
     var onAbort = opts.onAbort || _.noop;
@@ -165,6 +176,7 @@ module.exports = (function () {
 
           var from = _styles$property[0];
           var to = _styles$property[1];
+
           styles[property] = ["" + transformHA + " " + from, "" + transformHA + " " + to];
         }
       });
@@ -200,4 +212,5 @@ module.exports = (function () {
 
   return _ref;
 })();
+
 // prepare the property to avoid reshapes
