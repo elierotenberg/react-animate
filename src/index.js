@@ -50,7 +50,7 @@ export default {
     if(__DEV__) { // typecheck parameters in dev mode
       name.should.be.a.String;
     }
-    return this.state[privateSymbol(`animation${name}`)] || {};
+    return this.state && this.state[privateSymbol(`animation${name}`)] || {};
   },
 
   isAnimated(name) {
