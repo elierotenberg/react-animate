@@ -9,6 +9,18 @@ function privateSymbol(property) {
   return `__animateMixin${property}`;
 }
 
+function isMobile(userAgent) {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+}
+
+function isGingerbread(userAgent) {
+  return /Android 2\.3\.[3-7]/i.test(userAgent);
+}
+
+// Hardware acceleration trick constants
+const transformProperties = ['WebkitTransform', 'MozTransform', 'MSTransform', 'OTransform', 'Transform'];
+const transformHA = 'translateZ(0)';
+
 // Decide whether we should do the hardware accelaration trick
 // if we are not explicitly prevented from.
 // The trick will be enabled in mobile browsers which are not
@@ -22,18 +34,25 @@ function shouldEnableHA() {
     return false;
   }
   // is mobile but not gingerbread
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) && /Android 2\.3\.[3-7]/i.test(userAgent);
+  return isMobile(userAgent) && !isGingerbread(userAgent);
+}
+
+function enableHA(styles) {
+  _.each(transformProperties, (property) => { // for each 'transform' property, set/prepend 'translateZ(0)'
+    if(styles[property] === void 0) {
+      styles[property] = [transformHA, transformHA];
+    }
+    else {
+      const [from, to] = styles[property];
+      styles[property] = [`${transformHA} ${from}`, `${transformHA} ${to}`];
+    }
+  });
 }
 
 const _animations = privateSymbol('animations');
-
 const DEFAULT_EASING = 'cubic-in-out';
 
-// Hardware acceleration trick constants
-const transformProperties =  ['WebkitTransform', 'MozTransform', 'MSTransform', 'OTransform', 'Transform'];
-const transformHA = 'translateZ(0)';
-
-export default {
+const Mixin = {
   [_animations]: null, // prepare the property to avoid reshapes
 
   componentWillMount() {
@@ -42,7 +61,7 @@ export default {
 
   componentWillUnmount() {
     if(this[_animations] !== null) { // abort any currently running animation
-      _.each(this[_animations], (animation, name) => this.abortAnimation(name));
+      _.each(this[_animations], (animation, name) => this.abortAnimation(name, animation));
     }
   },
 
@@ -75,7 +94,7 @@ export default {
   },
 
   animate(name, fromStyle, toStyle, duration, opts = {}) {
-    const easing = opts.easing  === void 0 ? DEFAULT_EASING : opts.easing;
+    const easing = opts.easing === void 0 ? DEFAULT_EASING : opts.easing;
     const onTick = opts.onTick || _.noop;
     const onAbort = opts.onAbort || _.noop;
     const onComplete = opts.onComplete || _.noop;
@@ -96,22 +115,21 @@ export default {
     const easingFn = _.isObject(easing) ? tween.ease.apply(tween, [easing.type, ...easing.arguments]) : tween.ease(easing);
     // reformat the input: [property]: [from, to]
     const styles = {};
-    _.each(fromStyle, (value, property) => styles[property] = [value, value]); // unless told otherwise below, the value is assumed constant
+    // unless told otherwise below, the value is assumed constant
+    _.each(fromStyle, (value, property) =>
+      styles[property] = [value, value]
+    );
     // if we dont have an initial value for each property, assume it is constant from the beginning
-    _.each(toStyle, (value, property) => styles[property] = styles[property] === void 0 ? [value, value] : [styles[property][0], value]);
-    const interpolators = _.mapValues(styles, ([from, to]) => tween.interpolate(from, to)); // get an interpolator for each property
-    const finalStyle = _.mapValues(styles, ([from, to]) => to); // pre-compute the final style
+    _.each(toStyle, (value, property) =>
+      styles[property] = styles[property] === void 0 ? [value, value] : [styles[property][0], value]
+    );
+    // get an interpolator for each property
+    const interpolators = _.mapValues(styles, ([from, to]) => tween.interpolate(from, to));
+    // pre-compute the final style
+    const finalStyle = _.mapValues(styles, ([from, to]) => { void from; return to; });
 
     if(!disableMobileHA && shouldEnableHA()) { // do the hardware acceleration trick
-      _.each(transformProperties, (property) => { // for each 'transform' property, set/prepend 'translateZ(0)'
-        if(styles[property] === void 0) {
-          styles[property] = [transformHA, transformHA];
-        }
-        else {
-          const [from, to] = styles[property];
-          styles[property] = [`${transformHA} ${from}`, `${transformHA} ${to}`];
-        }
-      });
+      enableHA(transformProperties, styles);
     }
 
     const start = Date.now();
@@ -119,7 +137,7 @@ export default {
 
     const tick = () => { // the main ticker function
       const now = Date.now();
-      const t = (now - start)/duration; // progress: starts at 0, ends at > 1
+      const t = (now - start) / duration; // progress: starts at 0, ends at > 1
       if(t > 1) { // we are past the end
         this.setState({ [stateKey]: finalStyle });
         onTick(finalStyle, 1, easingFn(1));
@@ -138,3 +156,5 @@ export default {
     return this;
   },
 };
+
+export default Mixin;

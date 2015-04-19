@@ -14,7 +14,6 @@ Trigger an animation with `animate`, and inject the associated style in the `ren
 ```js
 React.createClass({
   mixins: [AnimateMixin],
-
   fadeIn() {
     this.animate(
       'my-custom-animation', // animation name
