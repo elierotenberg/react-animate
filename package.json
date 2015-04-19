@@ -16,6 +16,14 @@
     "url": "https://github.com/elierotenberg/react-animate/issues"
   },
   "homepage": "https://github.com/elierotenberg/react-animate",
+  "dependencies": {
+    "babel": "^4.7.3",
+    "bluebird": "^2.9.13",
+    "lodash": "^3.4.0",
+    "raf": "^2.0.4",
+    "should": "^5.1.0",
+    "tween-interpolate": "^1.0.1"
+  },
   "devDependencies": {
     "del": "^1.1.1",
     "gulp": "^3.8.11",
@@ -26,13 +34,5 @@
     "gulp-sourcemaps": "^1.5.0",
     "gulp-util": "^3.0.4",
     "jshint-stylish": "^1.0.1"
-  },
-  "dependencies": {
-    "babel": "^4.7.3",
-    "bluebird": "^2.9.13",
-    "lodash": "^3.4.0",
-    "raf": "^2.0.4",
-    "should": "^5.1.0",
-    "tween-interpolate": "^1.0.1"
   }
 }
