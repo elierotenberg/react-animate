@@ -27,7 +27,7 @@ React.createClass({
   render() {
     return <div>
       <button onClick={this.fadeIn}>Click to fade in</button>
-      <div style={this.getAnimatedStyle('my-animation')}>
+      <div style={this.getAnimatedStyle('my-custom-animation')}>
         This text will appear soon after the click.
       </div>
     </div>;
