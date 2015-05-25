@@ -76,8 +76,8 @@ function shouldEnableHA() {
 }
 
 function enableHA(styles) {
+  // for each 'transform' property, set/prepend 'translateZ(0)'
   _.each(transformProperties, function (property) {
-    // for each 'transform' property, set/prepend 'translateZ(0)'
     if (styles[property] === void 0) {
       styles[property] = [transformHA, transformHA];
     } else {
@@ -95,31 +95,32 @@ var _animations = privateSymbol('animations');
 var DEFAULT_EASING = 'cubic-in-out';
 
 var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _defineProperty(_Mixin, 'componentWillMount', function componentWillMount() {
-  this[_animations] = {}; // initialize the property to no animations
+  // initialize the property to no animations
+  this[_animations] = {};
 }), _defineProperty(_Mixin, 'componentWillUnmount', function componentWillUnmount() {
   var _this = this;
 
+  // abort any currently running animation
   if (this[_animations] !== null) {
-    // abort any currently running animation
     _.each(this[_animations], function (animation, name) {
       return _this.abortAnimation(name, animation);
     });
   }
 }), _defineProperty(_Mixin, 'getAnimatedStyle', function getAnimatedStyle(name) {
+  // typecheck parameters in dev mode
   if (__DEV__) {
-    // typecheck parameters in dev mode
     name.should.be.a.String;
   }
   return this.state && this.state[privateSymbol('animation' + name)] || {};
 }), _defineProperty(_Mixin, 'isAnimated', function isAnimated(name) {
+  // typecheck parameters in dev mode
   if (__DEV__) {
-    // typecheck parameters in dev mode
     name.should.be.a.String;
   }
   return this[_animations][name] !== void 0;
 }), _defineProperty(_Mixin, 'abortAnimation', function abortAnimation(name) {
+  // typecheck parameters in dev mode
   if (__DEV__) {
-    // typecheck parameters in dev mode
     name.should.be.a.String;
   }
   if (this[_animations][name] !== void 0) {
@@ -132,10 +133,12 @@ var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _definePro
 
     _raf2['default'].cancel(nextTick);
     onAbort(currentStyle, t, easingFn(t));
-    delete this[_animations][name]; // unregister the animation
+    // unregister the animation
+    delete this[_animations][name];
     return true;
   }
-  return false; // silently fail but returns false
+  // silently fail but returns false
+  return false;
 }), _defineProperty(_Mixin, 'animate', function animate(name, fromStyle, toStyle, duration) {
   var _this2 = this;
 
@@ -146,8 +149,8 @@ var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _definePro
   var onAbort = opts.onAbort || _.noop;
   var onComplete = opts.onComplete || _.noop;
   var disableMobileHA = !!opts.disableMobileHA;
+  // typecheck parameters in dev mode
   if (__DEV__) {
-    // typecheck parameters in dev mode
     name.should.be.a.String;
     fromStyle.should.be.an.Object;
     toStyle.should.be.an.Object;
@@ -156,8 +159,8 @@ var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _definePro
     onAbort.should.be.a.Function;
     onComplete.should.be.a.Function;
   }
+  // if there is already an animation with this name, abort it
   if (this[_animations][name] !== void 0) {
-    // if there is already an animation with this name, abort it
     this.abortAnimation(name);
   }
   // create the actual easing function using tween-interpolate (d3 smash)
@@ -189,26 +192,29 @@ var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _definePro
     void from;return to;
   });
 
+  // do the hardware acceleration trick
   if (!disableMobileHA && shouldEnableHA()) {
-    // do the hardware acceleration trick
     enableHA(transformProperties, styles);
   }
 
   var start = Date.now();
   var stateKey = privateSymbol('animation' + name);
 
+  // the main ticker function
   var tick = function tick() {
-    // the main ticker function
     var now = Date.now();
-    var t = (now - start) / duration; // progress: starts at 0, ends at > 1
+    // progress: starts at 0, ends at > 1
+    var t = (now - start) / duration;
+    // we are past the end
     if (t > 1) {
-      // we are past the end
       _this2.setState(_defineProperty({}, stateKey, finalStyle));
       onTick(finalStyle, 1, easingFn(1));
       onComplete(finalStyle, t, easingFn(t));
-      delete _this2[_animations][name]; // unregister the animation
+      // unregister the animation
+      delete _this2[_animations][name];
       return;
-    } // the animation is not over yet
+      // the animation is not over yet
+    }
     var currentStyle = _.mapValues(interpolators, function (fn) {
       return fn(easingFn(t));
     });
@@ -224,4 +230,5 @@ var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _definePro
 
 exports['default'] = Mixin;
 module.exports = exports['default'];
+
 // prepare the property to avoid reshapes

@@ -10,11 +10,11 @@ function privateSymbol(property) {
 }
 
 function isMobile(userAgent) {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i).test(userAgent);
 }
 
 function isGingerbread(userAgent) {
-  return /Android 2\.3\.[3-7]/i.test(userAgent);
+  return (/Android 2\.3\.[3-7]/i).test(userAgent);
 }
 
 // Hardware acceleration trick constants
@@ -38,7 +38,8 @@ function shouldEnableHA() {
 }
 
 function enableHA(styles) {
-  _.each(transformProperties, (property) => { // for each 'transform' property, set/prepend 'translateZ(0)'
+  // for each 'transform' property, set/prepend 'translateZ(0)'
+  _.each(transformProperties, (property) => {
     if(styles[property] === void 0) {
       styles[property] = [transformHA, transformHA];
     }
@@ -53,44 +54,52 @@ const _animations = privateSymbol('animations');
 const DEFAULT_EASING = 'cubic-in-out';
 
 const Mixin = {
-  [_animations]: null, // prepare the property to avoid reshapes
+  // prepare the property to avoid reshapes
+  [_animations]: null,
 
   componentWillMount() {
-    this[_animations] = {}; // initialize the property to no animations
+    // initialize the property to no animations
+    this[_animations] = {};
   },
 
   componentWillUnmount() {
-    if(this[_animations] !== null) { // abort any currently running animation
+    // abort any currently running animation
+    if(this[_animations] !== null) {
       _.each(this[_animations], (animation, name) => this.abortAnimation(name, animation));
     }
   },
 
   getAnimatedStyle(name) {
-    if(__DEV__) { // typecheck parameters in dev mode
+    // typecheck parameters in dev mode
+    if(__DEV__) {
       name.should.be.a.String;
     }
     return this.state && this.state[privateSymbol(`animation${name}`)] || {};
   },
 
   isAnimated(name) {
-    if(__DEV__) { // typecheck parameters in dev mode
+    // typecheck parameters in dev mode
+    if(__DEV__) {
       name.should.be.a.String;
     }
     return (this[_animations][name] !== void 0);
   },
 
   abortAnimation(name) {
-    if(__DEV__) { // typecheck parameters in dev mode
+    // typecheck parameters in dev mode
+    if(__DEV__) {
       name.should.be.a.String;
     }
     if(this[_animations][name] !== void 0) {
       const { easingFn, onAbort, nextTick, t, currentStyle } = this[_animations][name];
       raf.cancel(nextTick);
       onAbort(currentStyle, t, easingFn(t));
-      delete this[_animations][name]; // unregister the animation
+      // unregister the animation
+      delete this[_animations][name];
       return true;
     }
-    return false; // silently fail but returns false
+    // silently fail but returns false
+    return false;
   },
 
   animate(name, fromStyle, toStyle, duration, opts = {}) {
@@ -99,7 +108,8 @@ const Mixin = {
     const onAbort = opts.onAbort || _.noop;
     const onComplete = opts.onComplete || _.noop;
     const disableMobileHA = !!opts.disableMobileHA;
-    if(__DEV__) { // typecheck parameters in dev mode
+    // typecheck parameters in dev mode
+    if(__DEV__) {
       name.should.be.a.String;
       fromStyle.should.be.an.Object;
       toStyle.should.be.an.Object;
@@ -108,7 +118,8 @@ const Mixin = {
       onAbort.should.be.a.Function;
       onComplete.should.be.a.Function;
     }
-    if(this[_animations][name] !== void 0) { // if there is already an animation with this name, abort it
+    // if there is already an animation with this name, abort it
+    if(this[_animations][name] !== void 0) {
       this.abortAnimation(name);
     }
     // create the actual easing function using tween-interpolate (d3 smash)
@@ -128,23 +139,29 @@ const Mixin = {
     // pre-compute the final style
     const finalStyle = _.mapValues(styles, ([from, to]) => { void from; return to; });
 
-    if(!disableMobileHA && shouldEnableHA()) { // do the hardware acceleration trick
+    // do the hardware acceleration trick
+    if(!disableMobileHA && shouldEnableHA()) {
       enableHA(transformProperties, styles);
     }
 
     const start = Date.now();
     const stateKey = privateSymbol(`animation${name}`);
 
-    const tick = () => { // the main ticker function
+    // the main ticker function
+    const tick = () => {
       const now = Date.now();
-      const t = (now - start) / duration; // progress: starts at 0, ends at > 1
-      if(t > 1) { // we are past the end
+      // progress: starts at 0, ends at > 1
+      const t = (now - start) / duration;
+      // we are past the end
+      if(t > 1) {
         this.setState({ [stateKey]: finalStyle });
         onTick(finalStyle, 1, easingFn(1));
         onComplete(finalStyle, t, easingFn(t));
-        delete this[_animations][name]; // unregister the animation
+        // unregister the animation
+        delete this[_animations][name];
         return;
-      } // the animation is not over yet
+        // the animation is not over yet
+      }
       const currentStyle = _.mapValues(interpolators, (fn) => fn(easingFn(t)));
       this.setState({ [stateKey]: currentStyle });
       onTick(currentStyle, t, easingFn(t));
