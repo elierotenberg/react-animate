@@ -21,7 +21,9 @@
     "babel-runtime": "^5.4.7",
     "bluebird": "^2.9.26",
     "lodash": "^3.9.2",
-    "should": "^6.0.3"
+    "raf": "^3.0.0",
+    "should": "^6.0.3",
+    "tween-interpolate": "^1.0.1"
   },
   "devDependencies": {
     "babel-eslint": "^3.1.9",
