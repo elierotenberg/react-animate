@@ -7,49 +7,52 @@ It works by interpolating intermediate styles values and applying them to specia
 Multiples animations can be run concurrently since each animation is identified by a name. Different names target different animations.
 
 ### Usage
-A component with the `AnimateMixin` mixin gets three new methods: `animate`, `getAnimatedStyle`, and `abortAnimation` (which is of limited use under normal circonstances
-since the mixin takes care of aborting any animations before unmounting).
 
-Trigger an animation with `animate`, and inject the associated style in the `render` function using `getAnimatedStyle`.
+Fully embracing ES6 classes, `react-animate` allows you to extend a `React.Component` and add new methods without collision using ES6 `Symbol`. Such an extended class can be created by using `Animate.extend(Component)`. The new methods are accessible using either method call delegation or `Symbol` dereferencing:
+
 ```js
-React.createClass({
-  mixins: [AnimateMixin],
+this[Animate['@animate']](...);
+// or equivalently
+Animate.animate.call(this, ...);
+```
+
+The extended component gets three new methods: `Animate['@animate']`, `Animate['@getAnimatedStyle']`, and `Animate['@abortAnimation']` (the latter being of limited use under normal circomstances - because `Animate` takes care of aborting running animations before unmounting - but can prove useful sometimes to actually interrupt a running animation).
+
+Trigger an animation with `animate`, and inject the associated style in the `render` function using `getAnimatedStyle`:
+```js
+Animate.extend(class MyComponent extends React.Component {
   fadeIn() {
-    this.animate(
+    // syntax using call delegation
+    Animate.animate.call(this,
       'my-custom-animation', // animation name
       { opacity: 0 }, // initial style
       { opacity: 1 }, // final style
       1000, // animation duration (in ms)
       { easing: 'linear' } // other options
     );
-  },
+    // alternate syntax using Symbol
+    this[Animate['@animate']](
+      'my-custom-animation', // animation name
+      { opacity: 0 }, // initial style
+      { opacity: 1 }, // final style
+      1000, // animation duration (in ms)
+      { easing: 'linear' } // other options
+    );
+  }
 
   render() {
     return <div>
       <button onClick={this.fadeIn}>Click to fade in</button>
-      <div style={this.getAnimatedStyle('my-custom-animation')}>
+      <div style={Animate.getAnimatedStyle.call(this, 'my-custom-animation')}>
         This text will appear soon after the click.
       </div>
     </div>;
-  },
+  }
 });
 ```
-
-### Installation
-
-`npm install react-animate --save`
-
-CommonJS:
-
-`var AnimateMixin = require('react-animate');`
-
-ES6 modules (via `6to5`):
-
-`import AnimateMixin from 'react-animate';`
-
 ### API
 
-#### `this.animate(name, initialStyle, finalStyle, duration, opts)`
+#### `animate(name, initialStyle, finalStyle, duration, opts)`
 
 Start an animation. Returns `this` for chaining.
 
@@ -67,18 +70,12 @@ Start an animation. Returns `this` for chaining.
 
   - `disableMobileHA`: flag to prevent the heuristic addition of dummy properties to attempt to force hardware acceleration on mobiles. Defaults to `false`.
 
-#### `this.getAnimatedStyle(name)`
+#### `getAnimatedStyle(name)`
 
 Get the current value of the animated style. You can call it from `render()` and pass it directly as the `style` prop of a React DOM element such as `<div>`. If no animation with this name exists, it will fail silently and return an empty hash (`{}`).
 
-#### `this.abortAnimation(name)`
+#### `abortAnimation(name)`
 
 Abort the animation with the given name, if it exists. Returns `true` if an animation with this name existed. Returns `false` otherwise.
 
 Note that you don't have to call this function in `componentWillUnmount`. `react-animate` will take care of that for you.
-
-#### OMG ES6 EVERYWHERE
-
-You don't need to use ES6 or any transpiler to use this package.
-
-It is entirely transpiled to ES5 using `6to5` and you can use it in your regular CommonJS environment (eg. `node`, `browserify`, `webpack`). You should try it sometime, though.

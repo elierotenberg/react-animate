@@ -1,12 +1,22 @@
 'use strict';
 
-var _toConsumableArray = require('babel-runtime/helpers/to-consumable-array')['default'];
+var _inherits = require('babel-runtime/helpers/inherits')['default'];
+
+var _get = require('babel-runtime/helpers/get')['default'];
+
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
 
 var _defineProperty = require('babel-runtime/helpers/define-property')['default'];
+
+var _toConsumableArray = require('babel-runtime/helpers/to-consumable-array')['default'];
 
 var _slicedToArray = require('babel-runtime/helpers/sliced-to-array')['default'];
 
 var _Object$defineProperty = require('babel-runtime/core-js/object/define-property')['default'];
+
+var _Symbol = require('babel-runtime/core-js/symbol')['default'];
 
 var _Object$assign = require('babel-runtime/core-js/object/assign')['default'];
 
@@ -15,8 +25,6 @@ var _interopRequireDefault = require('babel-runtime/helpers/interop-require-defa
 _Object$defineProperty(exports, '__esModule', {
   value: true
 });
-
-var _Mixin;
 
 var _raf = require('raf');
 
@@ -36,14 +44,6 @@ var __NODE__ = !__BROWSER__;
 if (__DEV__) {
   Promise.longStackTraces();
   Error.stackTraceLimit = Infinity;
-}
-
-// To avoid collisions with other mixins,
-// wrap private properties in this method.
-// It doesn't implement any actual protection
-// mechanisms but merely avoids mistakes/conflicts.
-function privateSymbol(property) {
-  return '__animateMixin' + property;
 }
 
 function isMobile(userAgent) {
@@ -91,144 +91,245 @@ function enableHA(styles) {
   });
 }
 
-var _animations = privateSymbol('animations');
-var DEFAULT_EASING = 'cubic-in-out';
+var Animate = {
+  '@animations': _Symbol('animations'),
 
-var Mixin = (_Mixin = {}, _defineProperty(_Mixin, _animations, null), _defineProperty(_Mixin, 'componentWillMount', function componentWillMount() {
-  // initialize the property to no animations
-  this[_animations] = {};
-}), _defineProperty(_Mixin, 'componentWillUnmount', function componentWillUnmount() {
-  var _this = this;
+  '@abortAnimation': _Symbol('abortAnimation'),
 
-  // abort any currently running animation
-  if (this[_animations] !== null) {
-    _.each(this[_animations], function (animation, name) {
-      return _this.abortAnimation(name, animation);
-    });
-  }
-}), _defineProperty(_Mixin, 'getAnimatedStyle', function getAnimatedStyle(name) {
-  // typecheck parameters in dev mode
-  if (__DEV__) {
-    name.should.be.a.String;
-  }
-  return this.state && this.state[privateSymbol('animation' + name)] || {};
-}), _defineProperty(_Mixin, 'isAnimated', function isAnimated(name) {
-  // typecheck parameters in dev mode
-  if (__DEV__) {
-    name.should.be.a.String;
-  }
-  return this[_animations][name] !== void 0;
-}), _defineProperty(_Mixin, 'abortAnimation', function abortAnimation(name) {
-  // typecheck parameters in dev mode
-  if (__DEV__) {
-    name.should.be.a.String;
-  }
-  if (this[_animations][name] !== void 0) {
-    var _animations$name = this[_animations][name];
-    var easingFn = _animations$name.easingFn;
-    var onAbort = _animations$name.onAbort;
-    var nextTick = _animations$name.nextTick;
-    var t = _animations$name.t;
-    var currentStyle = _animations$name.currentStyle;
+  '@animate': _Symbol('animate'),
 
-    _raf2['default'].cancel(nextTick);
-    onAbort(currentStyle, t, easingFn(t));
-    // unregister the animation
-    delete this[_animations][name];
-    return true;
-  }
-  // silently fail but returns false
-  return false;
-}), _defineProperty(_Mixin, 'animate', function animate(name, fromStyle, toStyle, duration) {
-  var _this2 = this;
+  '@getAnimatedStyle': _Symbol('getAnimatedStyle'),
 
-  var opts = arguments[4] === undefined ? {} : arguments[4];
+  '@isAnimated': _Symbol('isAnimated'),
 
-  var easing = opts.easing === void 0 ? DEFAULT_EASING : opts.easing;
-  var onTick = opts.onTick || _.noop;
-  var onAbort = opts.onAbort || _.noop;
-  var onComplete = opts.onComplete || _.noop;
-  var disableMobileHA = !!opts.disableMobileHA;
-  // typecheck parameters in dev mode
-  if (__DEV__) {
-    name.should.be.a.String;
-    fromStyle.should.be.an.Object;
-    toStyle.should.be.an.Object;
-    duration.should.be.a.Number.which.is.above(0);
-    onTick.should.be.a.Function;
-    onAbort.should.be.a.Function;
-    onComplete.should.be.a.Function;
-  }
-  // if there is already an animation with this name, abort it
-  if (this[_animations][name] !== void 0) {
-    this.abortAnimation(name);
-  }
-  // create the actual easing function using tween-interpolate (d3 smash)
-  var easingFn = _.isObject(easing) ? _tweenInterpolate2['default'].ease.apply(_tweenInterpolate2['default'], [easing.type].concat(_toConsumableArray(easing.arguments))) : _tweenInterpolate2['default'].ease(easing);
-  // reformat the input: [property]: [from, to]
-  var styles = {};
-  // unless told otherwise below, the value is assumed constant
-  _.each(fromStyle, function (value, property) {
-    return styles[property] = [value, value];
-  });
-  // if we dont have an initial value for each property, assume it is constant from the beginning
-  _.each(toStyle, function (value, property) {
-    return styles[property] = styles[property] === void 0 ? [value, value] : [styles[property][0], value];
-  });
-  // get an interpolator for each property
-  var interpolators = _.mapValues(styles, function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 2);
-
-    var from = _ref2[0];
-    var to = _ref2[1];
-    return _tweenInterpolate2['default'].interpolate(from, to);
-  });
-  // pre-compute the final style
-  var finalStyle = _.mapValues(styles, function (_ref3) {
-    var _ref32 = _slicedToArray(_ref3, 2);
-
-    var from = _ref32[0];
-    var to = _ref32[1];
-    void from;return to;
-  });
-
-  // do the hardware acceleration trick
-  if (!disableMobileHA && shouldEnableHA()) {
-    enableHA(transformProperties, styles);
-  }
-
-  var start = Date.now();
-  var stateKey = privateSymbol('animation' + name);
-
-  // the main ticker function
-  var tick = function tick() {
-    var now = Date.now();
-    // progress: starts at 0, ends at > 1
-    var t = (now - start) / duration;
-    // we are past the end
-    if (t > 1) {
-      _this2.setState(_defineProperty({}, stateKey, finalStyle));
-      onTick(finalStyle, 1, easingFn(1));
-      onComplete(finalStyle, t, easingFn(t));
-      // unregister the animation
-      delete _this2[_animations][name];
-      return;
-      // the animation is not over yet
+  animate: function animate() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
-    var currentStyle = _.mapValues(interpolators, function (fn) {
-      return fn(easingFn(t));
-    });
-    _this2.setState(_defineProperty({}, stateKey, currentStyle));
-    onTick(currentStyle, t, easingFn(t));
-    _Object$assign(_this2[_animations][name], { nextTick: (0, _raf2['default'])(tick), t: t, currentStyle: currentStyle });
-  };
 
-  // register the animation
-  this[_animations][name] = { easingFn: easingFn, onAbort: onAbort, nextTick: (0, _raf2['default'])(tick), t: 0, currentStyle: fromStyle };
-  return this;
-}), _Mixin);
+    if (__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@animate']].apply(this, args);
+  },
 
-exports['default'] = Mixin;
+  abortAnimation: function abortAnimation() {
+    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    if (__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@abortAnimation']].apply(this, args);
+  },
+
+  getAnimatedStyle: function getAnimatedStyle() {
+    for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      args[_key3] = arguments[_key3];
+    }
+
+    if (__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@getAnimatedStyle']].apply(this, args);
+  },
+
+  isAnimated: function isAnimated() {
+    for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
+    }
+
+    if (__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@isAnimated']].apply(this, args);
+  },
+
+  DEFAULT_EASING: 'cubic-in-out',
+
+  extend: null };
+
+function animatedStyleStateKey(name) {
+  return 'Animate@' + name;
+}
+
+Animate.extend = function (Component) {
+  return (function (_Component) {
+    var _class = function (props) {
+      _classCallCheck(this, _class);
+
+      _get(Object.getPrototypeOf(_class.prototype), 'constructor', this).call(this, props);
+      if (!_.isObject(this.state)) {
+        this.state = {};
+      }
+      this[Animate['@animations']] = {};
+    };
+
+    _inherits(_class, _Component);
+
+    _createClass(_class, [{
+      key: 'componentWillUnmount',
+      value: function componentWillUnmount() {
+        var _this5 = this;
+
+        if (_get(Object.getPrototypeOf(_class.prototype), 'componentWillUnmount', this)) {
+          _get(Object.getPrototypeOf(_class.prototype), 'componentWillUnmount', this).call(this);
+        }
+        if (this[Animate['@animations']] !== null) {
+          _.each(this[Animate['@animations']], function (animation, name) {
+            return Animate.abortAnimation.call(_this5, name, animation);
+          });
+        }
+      }
+    }, {
+      key: Animate['@getAnimatedStyle'],
+      value: function (name) {
+        if (__DEV__) {
+          name.should.be.a.String;
+        }
+        return this.state && this.state[animatedStyleStateKey(name)] || {};
+      }
+    }, {
+      key: Animate['@isAnimated'],
+      value: function (name) {
+        if (__DEV__) {
+          name.should.be.a.String;
+        }
+        return this[Animate['@animations']][name] !== void 0;
+      }
+    }, {
+      key: Animate['@abortAnimation'],
+      value: function (name) {
+        if (__DEV__) {
+          name.should.be.a.String;
+        }
+        if (this[Animate['@animations']][name] !== void 0) {
+          var _Animate$Animations$name = this[Animate['@animations']][name];
+          var easingFn = _Animate$Animations$name.easingFn;
+          var onAbort = _Animate$Animations$name.onAbort;
+          var nextTick = _Animate$Animations$name.nextTick;
+          var t = _Animate$Animations$name.t;
+          var currentStyle = _Animate$Animations$name.currentStyle;
+
+          _raf2['default'].cancel(nextTick);
+          onAbort(currentStyle, t, easingFn(t));
+          // unregister the animation
+          delete this[Animate['@animations']][name];
+          return true;
+        }
+        // silently fail but returns false
+        return false;
+      }
+    }, {
+      key: Animate['@animate'],
+      value: function (name, fromStyle, toStyle, duration) {
+        var _this6 = this;
+
+        var opts = arguments[4] === undefined ? {} : arguments[4];
+        var _opts$easing = opts.easing;
+        var easing = _opts$easing === undefined ? Animate.DEFAULT_EASING : _opts$easing;
+        var _opts$onTick = opts.onTick;
+        var onTick = _opts$onTick === undefined ? function () {
+          return void 0;
+        } : _opts$onTick;
+        var _opts$onAbort = opts.onAbort;
+        var onAbort = _opts$onAbort === undefined ? function () {
+          return void 0;
+        } : _opts$onAbort;
+        var _opts$onComplete = opts.onComplete;
+        var onComplete = _opts$onComplete === undefined ? function () {
+          return void 0;
+        } : _opts$onComplete;
+        var _opts$disableMobileHA = opts.disableMobileHA;
+        var disableMobileHA = _opts$disableMobileHA === undefined ? false : _opts$disableMobileHA;
+
+        if (__DEV__) {
+          name.should.be.a.String;
+          fromStyle.should.be.an.Object;
+          toStyle.should.be.an.Object;
+          duration.should.be.a.Number.which.is.above(0);
+          onTick.should.be.a.Function;
+          onAbort.should.be.a.Function;
+          onComplete.should.be.a.Function;
+        }
+        // if there is already an animation with this name, abort it
+        if (this[Animate['@animations']][name] !== void 0) {
+          Animate.abortAnimation.call(this, name);
+        }
+        // create the actual easing function using tween-interpolate (d3 smash)
+        var easingFn = _.isObject(easing) ? _tweenInterpolate2['default'].ease.apply(_tweenInterpolate2['default'], [easing.type].concat(_toConsumableArray(easing.arguments))) : _tweenInterpolate2['default'].ease(easing);
+        // reformat the input: [property]: [from, to]
+        var styles = {};
+        // unless told otherwise below, the value is assumed constant
+        _.each(fromStyle, function (value, property) {
+          return styles[property] = [value, value];
+        });
+        // if we dont have an initial value for each property, assume it is constant from the beginning
+        _.each(toStyle, function (value, property) {
+          return styles[property] = styles[property] === void 0 ? [value, value] : [styles[property][0], value];
+        });
+        // get an interpolator for each property
+        var interpolators = _.mapValues(styles, function (_ref) {
+          var _ref2 = _slicedToArray(_ref, 2);
+
+          var from = _ref2[0];
+          var to = _ref2[1];
+          return _tweenInterpolate2['default'].interpolate(from, to);
+        });
+        // pre-compute the final style (ignore [from])
+        var finalStyle = _.mapValues(styles, function (_ref3) {
+          var _ref32 = _slicedToArray(_ref3, 2);
+
+          var to = _ref32[1];
+          return to;
+        });
+
+        // do the hardware acceleration trick
+        if (!disableMobileHA && shouldEnableHA()) {
+          enableHA(transformProperties, styles);
+        }
+
+        var start = Date.now();
+        var stateKey = animatedStyleStateKey(name);
+
+        // the main ticker function
+        var tick = function tick() {
+          var now = Date.now();
+          // progress: starts at 0, ends at > 1
+          var t = (now - start) / duration;
+          // we are past the end
+          if (t > 1) {
+            _this6.setState(_defineProperty({}, stateKey, finalStyle));
+            onTick(finalStyle, 1, easingFn(1));
+            onComplete(finalStyle, t, easingFn(t));
+            // unregister the animation
+            delete _this6[Animate['@animations']][name];
+            return;
+            // the animation is not over yet
+          }
+          var currentStyle = _.mapValues(interpolators, function (fn) {
+            return fn(easingFn(t));
+          });
+          _this6.setState(_defineProperty({}, stateKey, currentStyle));
+          onTick(currentStyle, t, easingFn(t));
+          _Object$assign(_this6[Animate['@animations']][name], { nextTick: _raf2['default'](tick), t: t, currentStyle: currentStyle });
+        };
+
+        // register the animation
+        this[Animate['@animations']][name] = {
+          easingFn: easingFn,
+          onAbort: onAbort,
+          nextTick: _raf2['default'](tick),
+          t: 0,
+          currentStyle: fromStyle };
+        return this;
+      }
+    }]);
+
+    return _class;
+  })(Component);
+};
+
+exports['default'] = Animate;
 module.exports = exports['default'];
-
-// prepare the property to avoid reshapes

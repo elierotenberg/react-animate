@@ -1,14 +1,6 @@
 import raf from 'raf';
 import tween from 'tween-interpolate';
 
-// To avoid collisions with other mixins,
-// wrap private properties in this method.
-// It doesn't implement any actual protection
-// mechanisms but merely avoids mistakes/conflicts.
-function privateSymbol(property) {
-  return `__animateMixin${property}`;
-}
-
 function isMobile(userAgent) {
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i).test(userAgent);
 }
@@ -50,65 +42,111 @@ function enableHA(styles) {
   });
 }
 
-const _animations = privateSymbol('animations');
-const DEFAULT_EASING = 'cubic-in-out';
+const Animate = {
+  '@animations': Symbol('animations'),
 
-const Mixin = {
-  // prepare the property to avoid reshapes
-  [_animations]: null,
+  '@abortAnimation': Symbol('abortAnimation'),
 
-  componentWillMount() {
-    // initialize the property to no animations
-    this[_animations] = {};
+  '@animate': Symbol('animate'),
+
+  '@getAnimatedStyle': Symbol('getAnimatedStyle'),
+
+  '@isAnimated': Symbol('isAnimated'),
+
+  animate(...args) {
+    if(__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@animate']](...args);
   },
+
+  abortAnimation(...args) {
+    if(__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@abortAnimation']](...args);
+  },
+
+  getAnimatedStyle(...args) {
+    if(__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@getAnimatedStyle']](...args);
+  },
+
+  isAnimated(...args) {
+    if(__DEV__) {
+      this.should.not.be.exactly(Animate);
+    }
+    return this[Animate['@isAnimated']](...args);
+  },
+
+  DEFAULT_EASING: 'cubic-in-out',
+
+  extend: null,
+};
+
+function animatedStyleStateKey(name) {
+  return `Animate@${name}`;
+}
+
+Animate.extend = (Component) => class extends Component {
+  constructor(props) {
+    super(props);
+    if(!_.isObject(this.state)) {
+      this.state = {};
+    }
+    this[Animate['@animations']] = {};
+  }
 
   componentWillUnmount() {
-    // abort any currently running animation
-    if(this[_animations] !== null) {
-      _.each(this[_animations], (animation, name) => this.abortAnimation(name, animation));
+    if(super.componentWillUnmount) {
+      super.componentWillUnmount();
     }
-  },
+    if(this[Animate['@animations']] !== null) {
+      _.each(this[Animate['@animations']], (animation, name) => Animate.abortAnimation.call(this, name, animation));
+    }
+  }
 
-  getAnimatedStyle(name) {
-    // typecheck parameters in dev mode
+  [Animate['@getAnimatedStyle']](name) {
     if(__DEV__) {
       name.should.be.a.String;
     }
-    return this.state && this.state[privateSymbol(`animation${name}`)] || {};
-  },
+    return this.state && this.state[animatedStyleStateKey(name)] || {};
+  }
 
-  isAnimated(name) {
-    // typecheck parameters in dev mode
+  [Animate['@isAnimated']](name) {
     if(__DEV__) {
       name.should.be.a.String;
     }
-    return (this[_animations][name] !== void 0);
-  },
+    return (this[Animate['@animations']][name] !== void 0);
+  }
 
-  abortAnimation(name) {
-    // typecheck parameters in dev mode
+  [Animate['@abortAnimation']](name) {
     if(__DEV__) {
       name.should.be.a.String;
     }
-    if(this[_animations][name] !== void 0) {
-      const { easingFn, onAbort, nextTick, t, currentStyle } = this[_animations][name];
+    if(this[Animate['@animations']][name] !== void 0) {
+      const { easingFn, onAbort, nextTick, t, currentStyle } = this[Animate['@animations']][name];
       raf.cancel(nextTick);
       onAbort(currentStyle, t, easingFn(t));
       // unregister the animation
-      delete this[_animations][name];
+      delete this[Animate['@animations']][name];
       return true;
     }
     // silently fail but returns false
     return false;
-  },
+  }
 
-  animate(name, fromStyle, toStyle, duration, opts = {}) {
-    const easing = opts.easing === void 0 ? DEFAULT_EASING : opts.easing;
-    const onTick = opts.onTick || _.noop;
-    const onAbort = opts.onAbort || _.noop;
-    const onComplete = opts.onComplete || _.noop;
-    const disableMobileHA = !!opts.disableMobileHA;
-    // typecheck parameters in dev mode
+  [Animate['@animate']](name, fromStyle, toStyle, duration, opts = {}) {
+    const {
+      easing = Animate.DEFAULT_EASING,
+      onTick = () => void 0,
+      onAbort = () => void 0,
+      onComplete = () => void 0,
+      disableMobileHA = false,
+    } = opts;
+
     if(__DEV__) {
       name.should.be.a.String;
       fromStyle.should.be.an.Object;
@@ -119,8 +157,8 @@ const Mixin = {
       onComplete.should.be.a.Function;
     }
     // if there is already an animation with this name, abort it
-    if(this[_animations][name] !== void 0) {
-      this.abortAnimation(name);
+    if(this[Animate['@animations']][name] !== void 0) {
+      Animate.abortAnimation.call(this, name);
     }
     // create the actual easing function using tween-interpolate (d3 smash)
     const easingFn = _.isObject(easing) ? tween.ease.apply(tween, [easing.type, ...easing.arguments]) : tween.ease(easing);
@@ -136,8 +174,8 @@ const Mixin = {
     );
     // get an interpolator for each property
     const interpolators = _.mapValues(styles, ([from, to]) => tween.interpolate(from, to));
-    // pre-compute the final style
-    const finalStyle = _.mapValues(styles, ([from, to]) => { void from; return to; });
+    // pre-compute the final style (ignore [from])
+    const finalStyle = _.mapValues(styles, ([, to]) => to);
 
     // do the hardware acceleration trick
     if(!disableMobileHA && shouldEnableHA()) {
@@ -145,7 +183,7 @@ const Mixin = {
     }
 
     const start = Date.now();
-    const stateKey = privateSymbol(`animation${name}`);
+    const stateKey = animatedStyleStateKey(name);
 
     // the main ticker function
     const tick = () => {
@@ -158,20 +196,26 @@ const Mixin = {
         onTick(finalStyle, 1, easingFn(1));
         onComplete(finalStyle, t, easingFn(t));
         // unregister the animation
-        delete this[_animations][name];
+        delete this[Animate['@animations']][name];
         return;
         // the animation is not over yet
       }
       const currentStyle = _.mapValues(interpolators, (fn) => fn(easingFn(t)));
       this.setState({ [stateKey]: currentStyle });
       onTick(currentStyle, t, easingFn(t));
-      Object.assign(this[_animations][name], { nextTick: raf(tick), t, currentStyle });
+      Object.assign(this[Animate['@animations']][name], { nextTick: raf(tick), t, currentStyle });
     };
 
     // register the animation
-    this[_animations][name] = { easingFn, onAbort, nextTick: raf(tick), t: 0, currentStyle: fromStyle };
+    this[Animate['@animations']][name] = {
+      easingFn,
+      onAbort,
+      nextTick: raf(tick),
+      t: 0,
+      currentStyle: fromStyle,
+    };
     return this;
-  },
+  }
 };
 
-export default Mixin;
+export default Animate;
