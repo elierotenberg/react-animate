@@ -1,5 +1,8 @@
 import raf from 'raf';
 import tween from 'tween-interpolate';
+import _ from 'lodash';
+const __DEV__ = process.env.NODE_ENV === 'development';
+const __BROWSER__ = (typeof window === 'object');
 
 function isMobile(userAgent) {
   return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i).test(userAgent);

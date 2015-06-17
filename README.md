@@ -50,6 +50,9 @@ Animate.extend(class MyComponent extends React.Component {
   }
 });
 ```
+
+This module is written in ES6/7. You will need `babel` to run it.
+
 ### API
 
 #### `animate(name, initialStyle, finalStyle, duration, opts)`

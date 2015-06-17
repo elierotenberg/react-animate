@@ -1,40 +1,37 @@
 {
   "name": "react-animate",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "license": "MIT",
+  "author": "Elie Rotenberg <elie@rotenberg.io>",
+  "main": "src/index.jsx",
   "repository": {
     "type": "git",
     "url": "https://github.com/elierotenberg/react-animate.git"
   },
-  "author": "Elie Rotenberg <elie@rotenberg.io>",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/elierotenberg/react-animate/issues"
   },
+  "scripts": {
+    "test": "gulp test"
+  },
   "homepage": "https://github.com/elierotenberg/react-animate",
   "dependencies": {
-    "babel": "^5.4.7",
-    "babel-runtime": "^5.4.7",
-    "bluebird": "^2.9.26",
-    "lodash": "^3.9.2",
+    "bluebird": "^2.9.30",
+    "lodash": "^3.9.3",
     "raf": "^3.0.0",
     "should": "^6.0.3",
     "tween-interpolate": "^1.0.1"
   },
   "devDependencies": {
-    "babel-eslint": "^3.1.9",
-    "del": "^1.2.0",
-    "eslint-plugin-react": "^2.3.0",
-    "gulp": "^3.8.11",
-    "gulp-babel": "^5.1.0",
-    "gulp-eslint": "^0.12.0",
-    "gulp-insert": "^0.4.0",
-    "gulp-plumber": "^1.0.1",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-util": "^3.0.4"
+    "babel": "^5.5.8",
+    "babel-eslint": "^3.1.15",
+    "babel-runtime": "^5.5.8",
+    "eslint": "^0.23.0",
+    "eslint-plugin-react": "^2.5.2",
+    "gulp": "^3.9.0",
+    "gulp-eslint": "^0.14.0",
+    "gulp-mocha": "^2.1.1",
+    "gulp-plumber": "^1.0.1"
   }
 }
