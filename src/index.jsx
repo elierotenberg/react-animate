@@ -206,7 +206,7 @@ Animate.extend = (Component) => class extends Component {
       const currentStyle = _.mapValues(interpolators, (fn) => fn(easingFn(t)));
       this.setState({ [stateKey]: currentStyle });
       onTick(currentStyle, t, easingFn(t));
-      Object.assign(this[Animate['@animations']][name], { nextTick: raf(tick), t, currentStyle });
+      _.assign(this[Animate['@animations']][name], { nextTick: raf(tick), t, currentStyle });
     };
 
     // register the animation
