@@ -36,7 +36,7 @@ function createBuild(platform, env) {
       errorHandler: (err) => console.error(err.stack),
     }))
     .pipe(changed(path.join(dist, platform, env, 'lib'), { extension: '.js', hasChanged: changed.compareSha1Digest }))
-    .pipe(babel(Object.assign({}, babelConfig[platform][env], { sourceMaps: 'both', retainLines: true })))
+    .pipe(babel(Object.assign({}, babelConfig[platform][env])))
     .pipe(gulp.dest(path.join(dist, platform, env, 'lib')))
   ;
 }

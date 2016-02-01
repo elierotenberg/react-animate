@@ -1,13 +1,6 @@
 module.exports = {
   plugins: [
-    'babel-plugin-syntax-async-functions',
     'babel-plugin-syntax-async-generators',
-    'babel-plugin-syntax-class-constructor-call',
-    'babel-plugin-syntax-class-properties',
-    'babel-plugin-syntax-decorators',
-    'babel-plugin-syntax-flow',
-    'babel-plugin-syntax-jsx',
-    'babel-plugin-syntax-object-rest-spread',
     'babel-plugin-syntax-trailing-function-commas',
     ['babel-plugin-transform-async-to-module-method', {
       'module': 'bluebird',
