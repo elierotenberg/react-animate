@@ -75,6 +75,8 @@
     "gulp-util": "^3.0.7",
     "json-loader": "^0.5.4",
     "mocha": "^2.3.4",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
     "rimraf": "^2.5.0",
     "run-sequence": "^1.1.5",
     "should": "^8.1.1",
